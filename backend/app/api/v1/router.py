@@ -8,6 +8,8 @@ from app.api.v1.organizations import router as orgs_router
 from app.api.v1.projects import router as projects_router
 from app.api.v1.queues import router as queues_router
 from app.api.v1.workers import router as workers_router
+from app.api.v1.metrics import router as metrics_router
+from app.api.v1.dlq import router as dlq_router
 
 v1_router = APIRouter(prefix="/api/v1")
 
@@ -18,3 +20,5 @@ v1_router.include_router(projects_router)
 v1_router.include_router(queues_router)
 v1_router.include_router(jobs_router)
 v1_router.include_router(workers_router)
+v1_router.include_router(metrics_router)
+v1_router.include_router(dlq_router)

@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import v1_router
+from app.api.websocket import router as ws_router
 from app.config import get_settings
 
 settings = get_settings()
@@ -49,6 +50,7 @@ app.add_middleware(
 
 # ── API Routes ───────────────────────────────────────────────
 app.include_router(v1_router)
+app.include_router(ws_router)
 
 
 # ── Health Check ─────────────────────────────────────────────
