@@ -34,6 +34,73 @@ services:
       timeout: 5s
       retries: 5
 
+  # ── Backend API ────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: djs-backend
+    restart: unless-stopped
+    environment:
+      - APP_NAME=Distributed Job Scheduler
+      - APP_ENV=production
+      - DEBUG=false
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-job_scheduler}
+      - POSTGRES_USER=${POSTGRES_USER:-scheduler_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-scheduler_secret_password}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-production-secret-key}
+      - AI_PROVIDER=${AI_PROVIDER:-mock}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ── Worker Service ─────────────────────────────────────────
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    container_name: djs-worker-1
+    restart: unless-stopped
+    environment:
+      - WORKER_ID=worker-docker-1
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-job_scheduler}
+      - POSTGRES_USER=${POSTGRES_USER:-scheduler_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-scheduler_secret_password}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - WORKER_MAX_CONCURRENCY=10
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ── Next.js Frontend ───────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: djs-frontend
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+      - NEXT_PUBLIC_WS_URL=ws://localhost:8000/ws
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
 volumes:
   postgres_data:
     driver: local
